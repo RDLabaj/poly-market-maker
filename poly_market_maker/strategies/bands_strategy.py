@@ -39,7 +39,7 @@ class BandsStrategy(BaseStrategy):
             )
 
         # remaining open orders
-        open_orders = list(set(orders) - set(orders_to_cancel))
+        open_orders = list(set(orderbook.orders) - set(orders_to_cancel))
         balance_locked_by_open_buys = sum(
             order.size * order.price for order in open_orders if order.side == Side.BUY
         )

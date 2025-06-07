@@ -3,19 +3,56 @@ from prometheus_client import start_http_server
 import time
 
 # Apply Cloudflare bypass fix BEFORE importing any py_clob_client modules
-try:
-    from cloudflare_fix import apply_cloudflare_fix
-    apply_cloudflare_fix()
-except ImportError:
-    print("Warning: cloudflare_fix.py not found, trying FlareSolverr...")
+import os
+
+# Try residential proxies first (best for Cloudflare bypass)
+smartproxy_username = os.getenv('SMARTPROXY_USERNAME')
+smartproxy_password = os.getenv('SMARTPROXY_PASSWORD')
+oxylabs_username = os.getenv('OXYLABS_USERNAME')
+oxylabs_password = os.getenv('OXYLABS_PASSWORD')
+
+proxy_activated = False
+
+# 1. Try SmartProxy first (3-day FREE trial)
+if smartproxy_username and smartproxy_password and not proxy_activated:
     try:
-        from flaresolverr_integration import setup_flaresolverr_bypass
-        if setup_flaresolverr_bypass():
-            print("✅ FlareSolverr Cloudflare bypass activated")
+        from smartproxy_integration import setup_smartproxy
+        if setup_smartproxy(smartproxy_username, smartproxy_password):
+            print("✅ SmartProxy residential proxy activated - 3-day FREE trial!")
+            proxy_activated = True
         else:
-            print("❌ FlareSolverr setup failed, Cloudflare protection may block requests")
+            print("❌ SmartProxy setup failed")
     except ImportError:
-        print("❌ No Cloudflare bypass available, POST requests will likely fail")
+        print("❌ SmartProxy integration not found")
+
+# 2. Try Oxylabs if SmartProxy failed
+if oxylabs_username and oxylabs_password and not proxy_activated:
+    try:
+        from oxylabs_proxy import setup_oxylabs_proxy
+        if setup_oxylabs_proxy(oxylabs_username, oxylabs_password):
+            print("✅ Oxylabs residential proxy activated!")
+            proxy_activated = True
+        else:
+            print("❌ Oxylabs setup failed")
+    except ImportError:
+        print("❌ Oxylabs integration not found")
+
+# 3. Fallback to other bypass methods if no proxy worked
+if not proxy_activated:
+    print("⚠️ No residential proxy available, trying fallback methods...")
+    try:
+        from cloudflare_fix import apply_cloudflare_fix
+        apply_cloudflare_fix()
+        print("✅ Basic Cloudflare fix applied")
+    except ImportError:
+        try:
+            from flaresolverr_integration import setup_flaresolverr_bypass
+            if setup_flaresolverr_bypass():
+                print("✅ FlareSolverr Cloudflare bypass activated")
+            else:
+                print("❌ FlareSolverr setup failed")
+        except ImportError:
+            print("❌ No Cloudflare bypass available - POST requests will likely fail!")
 
 from poly_market_maker.args import get_args
 from poly_market_maker.price_feed import PriceFeedClob
