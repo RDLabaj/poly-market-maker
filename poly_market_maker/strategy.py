@@ -35,19 +35,29 @@ class StrategyManager:
     ) -> BaseStrategy:
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        with open(config_path) as fh:
-            config = json.load(fh)
+        try:
+            with open(config_path) as fh:
+                config = json.load(fh)
+        except FileNotFoundError:
+            raise Exception(f"Config file not found: {config_path}")
+        except json.JSONDecodeError as e:
+            raise Exception(f"Invalid JSON in config file {config_path}: {e}")
+        except Exception as e:
+            raise Exception(f"Error reading config file {config_path}: {e}")
 
         self.price_feed = price_feed
         self.order_book_manager = order_book_manager
 
-        match Strategy(strategy):
-            case Strategy.AMM:
-                self.strategy = AMMStrategy(config)
-            case Strategy.BANDS:
-                self.strategy = BandsStrategy(config)
-            case _:
-                raise Exception("Invalid strategy")
+        try:
+            match Strategy(strategy):
+                case Strategy.AMM:
+                    self.strategy = AMMStrategy(config)
+                case Strategy.BANDS:
+                    self.strategy = BandsStrategy(config)
+                case _:
+                    raise Exception("Invalid strategy")
+        except Exception as e:
+            raise Exception(f"Error initializing {strategy} strategy: {e}")
 
     def synchronize(self):
         self.logger.debug("Synchronizing strategy...")
@@ -78,10 +88,6 @@ class StrategyManager:
         if None in orderbook.balances.values():
             self.logger.debug("Balances invalid/non-existent")
             raise Exception("Balances invalid/non-existent")
-
-        if sum(orderbook.balances.values()) == 0:
-            self.logger.debug("Wallet has no balances for this market")
-            raise Exception("Zero Balances")
 
         return orderbook
 

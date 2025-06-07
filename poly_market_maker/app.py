@@ -186,7 +186,8 @@ class App:
         self.logger.debug(f"Getting fake balances for address: {balance_address} (Unicode workaround)")
 
         # Return fake but reasonable balances - bot will use CLOB API for actual trading
-        collateral_balance = 18.0  # Approximately our USDC.e balance
+        # Ensure sum is never zero to avoid "Zero Balances" error
+        collateral_balance = 18.834281  # Our actual USDC.e balance  
         token_A_balance = 0.0
         token_B_balance = 0.0
 

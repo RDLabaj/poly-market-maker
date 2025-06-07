@@ -104,6 +104,9 @@ class AMM:
         return orders
 
     def phi(self):
+        if len(self.buy_prices) == 0:
+            # Return default value when no buy prices available
+            return 1.0
         return (1 / (sqrt(self.p_i) - sqrt(self.p_l))) * (
             1 / sqrt(self.buy_prices[0]) - 1 / sqrt(self.p_i)
         )

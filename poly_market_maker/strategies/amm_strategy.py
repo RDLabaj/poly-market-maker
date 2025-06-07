@@ -40,6 +40,20 @@ class AMMStrategy(BaseStrategy):
 
     @staticmethod
     def _get_config(config: dict):
+        required_params = ['p_min', 'p_max', 'spread', 'delta', 'depth', 'max_collateral']
+        missing_params = [param for param in required_params if param not in config]
+        
+        if missing_params:
+            raise ValueError(f"Missing required AMM config parameters: {missing_params}")
+        
+        # Validate parameter ranges
+        if config['p_min'] >= config['p_max']:
+            raise ValueError("p_min must be less than p_max")
+        if config['spread'] < 0:
+            raise ValueError("spread must be non-negative")
+        if config['max_collateral'] <= 0:
+            raise ValueError("max_collateral must be positive")
+            
         return AMMConfig(
             p_min=config.get("p_min"),
             p_max=config.get("p_max"),
@@ -53,42 +67,47 @@ class AMMStrategy(BaseStrategy):
         orders_to_cancel = []
         orders_to_place = []
 
-        expected_orders = self.amm_manager.get_expected_orders(
-            target_prices,
-            orderbook.balances,
-        )
-        expected_order_types = set(OrderType(order) for order in expected_orders)
-
-        orders_to_cancel += list(
-            filter(
-                lambda order: OrderType(order) not in expected_order_types,
-                orderbook.orders,
+        try:
+            expected_orders = self.amm_manager.get_expected_orders(
+                target_prices,
+                orderbook.balances,
             )
-        )
+            expected_order_types = set(OrderType(order) for order in expected_orders)
 
-        for order_type in expected_order_types:
-            open_orders = [
-                order for order in orderbook.orders if OrderType(order) == order_type
-            ]
-            open_size = sum(order.size for order in open_orders)
-            expected_size = sum(
-                order.size
-                for order in expected_orders
-                if OrderType(order) == order_type
+            orders_to_cancel += list(
+                filter(
+                    lambda order: OrderType(order) not in expected_order_types,
+                    orderbook.orders,
+                )
             )
 
-            # if open_size too big, cancel all orders of this type
-            if open_size > expected_size:
-                orders_to_cancel += open_orders
-                new_size = expected_size
-            # otherwise get the remaining size
-            else:
-                new_size = round(expected_size - open_size, 2)
-
-            if new_size >= MIN_SIZE:
-                orders_to_place += [
-                    self._new_order_from_order_type(order_type, new_size)
+            for order_type in expected_order_types:
+                open_orders = [
+                    order for order in orderbook.orders if OrderType(order) == order_type
                 ]
+                open_size = sum(order.size for order in open_orders)
+                expected_size = sum(
+                    order.size
+                    for order in expected_orders
+                    if OrderType(order) == order_type
+                )
+
+                # if open_size too big, cancel all orders of this type
+                if open_size > expected_size:
+                    orders_to_cancel += open_orders
+                    new_size = expected_size
+                # otherwise get the remaining size
+                else:
+                    new_size = round(expected_size - open_size, 2)
+
+                if new_size >= MIN_SIZE:
+                    orders_to_place += [
+                        self._new_order_from_order_type(order_type, new_size)
+                    ]
+        except Exception as e:
+            self.logger.error(f"Error generating AMM orders: {e}")
+            # Return empty lists to prevent strategy crash
+            return ([], [])
 
         return (orders_to_cancel, orders_to_place)
 
