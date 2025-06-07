@@ -1,20 +1,20 @@
 {
     "bands": [
         {
-            "min_margin": 0.002,
-            "avg_margin": 0.005,
-            "max_margin": 0.01,
-            "min_amount": 5.0,
-            "avg_amount": 8.0,
-            "max_amount": 12.0
+            "minMargin": 0.005,
+            "avgMargin": 0.01,
+            "maxMargin": 0.02,
+            "minAmount": 5.0,
+            "avgAmount": 6.0,
+            "maxAmount": 8.0
         },
         {
-            "min_margin": 0.01,
-            "avg_margin": 0.015,
-            "max_margin": 0.02,
-            "min_amount": 5.0,
-            "avg_amount": 6.0,
-            "max_amount": 10.0
+            "minMargin": 0.02,
+            "avgMargin": 0.03,
+            "maxMargin": 0.04,
+            "minAmount": 5.0,
+            "avgAmount": 7.0,
+            "maxAmount": 10.0
         }
     ]
 } 
