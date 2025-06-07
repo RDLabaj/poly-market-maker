@@ -1,7 +1,7 @@
 import logging
 import sys
 import time
-from py_clob_client.client import ClobClient, ApiCreds, OrderArgs, FilterParams
+from py_clob_client.client import ClobClient, ApiCreds, OrderArgs, OpenOrderParams
 from py_clob_client.exceptions import PolyApiException
 
 from poly_market_maker.utils import randomize_default_price
@@ -12,14 +12,24 @@ DEFAULT_PRICE = 0.5
 
 
 class ClobApi:
-    def __init__(self, host, chain_id, private_key):
+    def __init__(self, host, chain_id, private_key, funder_address=None, signature_type=0):
         self.logger = logging.getLogger(self.__class__.__name__)
 
-        self.client = self._init_client_L1(
-            host=host,
-            chain_id=chain_id,
-            private_key=private_key,
-        )
+        # Use proxy signature if funder_address is provided
+        if funder_address:
+            self.client = self._init_client_L1_proxy(
+                host=host,
+                chain_id=chain_id,
+                private_key=private_key,
+                funder_address=funder_address,
+                signature_type=signature_type
+            )
+        else:
+            self.client = self._init_client_L1(
+                host=host,
+                chain_id=chain_id,
+                private_key=private_key,
+            )
 
         try:
             api_creds = self.client.derive_api_key()
@@ -29,18 +39,31 @@ class ClobApi:
             api_creds = self.client.create_api_key()
             self.logger.debug(f"Api key created: {api_creds.api_key}.")
 
-        self.client = self._init_client_L2(
-            host=host,
-            chain_id=chain_id,
-            private_key=private_key,
-            creds=api_creds,
-        )
+        if funder_address:
+            self.client = self._init_client_L2_proxy(
+                host=host,
+                chain_id=chain_id,
+                private_key=private_key,
+                funder_address=funder_address,
+                signature_type=signature_type,
+                creds=api_creds,
+            )
+        else:
+            self.client = self._init_client_L2(
+                host=host,
+                chain_id=chain_id,
+                private_key=private_key,
+                creds=api_creds,
+            )
 
     def get_address(self):
         return self.client.get_address()
 
     def get_collateral_address(self):
-        return self.client.get_collateral_address()
+        # Use bridged USDC.e since that's what we have after the swap
+        return self.client.get_collateral_address()  # This returns USDC.e
+        # from web3 import Web3
+        # return Web3.toChecksumAddress("0x3c499c542cef5e3811e1192ce70d8cc03d5c3359")  # Native USDC
 
     def get_conditional_address(self):
         return self.client.get_conditional_address()
@@ -83,7 +106,7 @@ class ClobApi:
         self.logger.debug("Fetching open keeper orders from the API...")
         start_time = time.time()
         try:
-            resp = self.client.get_orders(FilterParams(market=condition_id))
+            resp = self.client.get_orders(OpenOrderParams(market=condition_id))
             clob_requests_latency.labels(method="get_orders", status="ok").observe(
                 (time.time() - start_time)
             )
@@ -199,6 +222,47 @@ class ClobApi:
                 return clob_client
         except:
             self.logger.error("Unable to connect to CLOB API, shutting down!")
+            sys.exit(1)
+
+    def _init_client_L1_proxy(
+        self,
+        host,
+        chain_id,
+        private_key,
+        funder_address,
+        signature_type
+    ) -> ClobClient:
+        clob_client = ClobClient(host, key=private_key, chain_id=chain_id, signature_type=signature_type, funder=funder_address)
+        try:
+            if clob_client.get_ok() == OK:
+                self.logger.info("Connected to CLOB API with proxy wallet!")
+                self.logger.info(
+                    "CLOB Keeper address: {}".format(clob_client.get_address())
+                )
+                self.logger.info(
+                    "CLOB Funder address: {}".format(funder_address)
+                )
+                return clob_client
+        except:
+            self.logger.error("Unable to connect to CLOB API with proxy wallet, shutting down!")
+            sys.exit(1)
+
+    def _init_client_L2_proxy(
+        self, host, chain_id, private_key, funder_address, signature_type, creds: ApiCreds
+    ) -> ClobClient:
+        clob_client = ClobClient(host, key=private_key, chain_id=chain_id, signature_type=signature_type, funder=funder_address, creds=creds)
+        try:
+            if clob_client.get_ok() == OK:
+                self.logger.info("Connected to CLOB API with proxy wallet and API creds!")
+                self.logger.info(
+                    "CLOB Keeper address: {}".format(clob_client.get_address())
+                )
+                self.logger.info(
+                    "CLOB Funder address: {}".format(funder_address)
+                )
+                return clob_client
+        except:
+            self.logger.error("Unable to connect to CLOB API with proxy wallet and creds, shutting down!")
             sys.exit(1)
 
     def _get_order(self, order_dict: dict) -> dict:

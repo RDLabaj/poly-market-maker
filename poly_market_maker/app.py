@@ -36,11 +36,14 @@ class App:
 
         self.web3 = setup_web3(args.rpc_url, args.private_key)
         self.address = self.web3.eth.account.from_key(args.private_key).address
+        self.funder_address = getattr(args, 'funder_address', None)
 
         self.clob_api = ClobApi(
             host=args.clob_api_url,
             chain_id=self.web3.eth.chain_id,
             private_key=args.private_key,
+            funder_address=self.funder_address,
+            signature_type=getattr(args, 'signature_type', 0),
         )
 
         self.gas_station = GasStation(
@@ -124,40 +127,42 @@ class App:
         """
         Fetch the onchain balances of collateral and conditional tokens for the keeper
         """
-        self.logger.debug(f"Getting balances for address: {self.address}")
+        # Use funder address for balance checking if available (proxy wallet)
+        balance_address = self.funder_address or self.address
+        self.logger.debug(f"Getting balances for address: {balance_address}")
 
         collateral_balance = self.contracts.token_balance_of(
-            self.clob_api.get_collateral_address(), self.address
+            self.clob_api.get_collateral_address(), balance_address
         )
         token_A_balance = self.contracts.token_balance_of(
             self.clob_api.get_conditional_address(),
-            self.address,
+            balance_address,
             self.market.token_id(Token.A),
         )
         token_B_balance = self.contracts.token_balance_of(
             self.clob_api.get_conditional_address(),
-            self.address,
+            balance_address,
             self.market.token_id(Token.B),
         )
-        gas_balance = self.contracts.gas_balance(self.address)
+        gas_balance = self.contracts.gas_balance(balance_address)
 
         keeper_balance_amount.labels(
-            accountaddress=self.address,
+            accountaddress=balance_address,
             assetaddress=self.clob_api.get_collateral_address(),
             tokenid="-1",
         ).set(collateral_balance)
         keeper_balance_amount.labels(
-            accountaddress=self.address,
+            accountaddress=balance_address,
             assetaddress=self.clob_api.get_conditional_address(),
             tokenid=self.market.token_id(Token.A),
         ).set(token_A_balance)
         keeper_balance_amount.labels(
-            accountaddress=self.address,
+            accountaddress=balance_address,
             assetaddress=self.clob_api.get_conditional_address(),
             tokenid=self.market.token_id(Token.B),
         ).set(token_B_balance)
         keeper_balance_amount.labels(
-            accountaddress=self.address,
+            accountaddress=balance_address,
             assetaddress="0x0",
             tokenid="-1",
         ).set(gas_balance)

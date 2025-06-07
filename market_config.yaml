@@ -1,0 +1,191 @@
+filters:
+  # 🏀 NBA Markets - Currently enabled (konkretne mecze)
+  - name: "NBA_GAMES"
+    keywords: 
+      - "NBA:"
+      - "Mavericks"
+      - "Grizzlies"
+      - "Heat"
+      - "Bulls"
+      - "Celtics"
+      - "Lakers"
+      - "Clippers"
+      - "Pacers"
+      - "Thunder"
+      - "Bucks"
+      - "Magic"
+      - "Spurs"
+      - "76ers"
+      - "Hornets"
+      - "Suns"
+      - "Nets"
+      - "Cavaliers"
+      - "Trail Blazers"
+      - "Wizards"
+      - "beat"
+      - "points"
+      - "matchup"
+    excluded_keywords:
+      - "college"
+      - "NCAA"
+      - "2022"
+      - "2021"
+      - "2020"
+    min_liquidity: 100.0
+    enabled: true
+
+  # 🏈 NFL Markets - Disabled by default
+  - name: "NFL"
+    keywords:
+      - "NFL"
+      - "football"
+      - "Super Bowl"
+      - "playoffs"
+      - "Chiefs"
+      - "Patriots"
+      - "Cowboys"
+      - "Packers"
+      - "49ers"
+    excluded_keywords:
+      - "college"
+      - "NCAA"
+      - "fantasy"
+    min_liquidity: 100.0
+    enabled: false
+
+  # ⚽ Soccer/Football Markets
+  - name: "Soccer"
+    keywords:
+      - "FIFA"
+      - "World Cup"
+      - "Premier League"
+      - "soccer"
+      - "football"
+      - "UEFA"
+      - "Champions League"
+      - "Barcelona"
+      - "Real Madrid"
+      - "Manchester"
+    excluded_keywords:
+      - "NFL"
+      - "American football"
+    min_liquidity: 75.0
+    enabled: false
+
+  # 🗳️ Political Elections
+  - name: "Elections"
+    keywords:
+      - "election"
+      - "vote"
+      - "president"
+      - "candidate"
+      - "polling"
+      - "Biden"
+      - "Trump"
+      - "Congress"
+      - "Senate"
+    categories:
+      - "Politics"
+      - "US-current-affairs"
+    min_liquidity: 200.0
+    enabled: true
+
+  # 💰 Cryptocurrency Markets
+  - name: "Crypto"
+    keywords:
+      - "Bitcoin"
+      - "BTC"
+      - "Ethereum" 
+      - "ETH"
+      - "crypto"
+      - "price"
+      - "blockchain"
+      - "DeFi"
+      - "Solana"
+      - "SOL"
+    categories:
+      - "Crypto"
+    min_liquidity: 100.0
+    enabled: true
+
+  # 🎬 Entertainment & Pop Culture
+  - name: "Entertainment"
+    keywords:
+      - "Oscar"
+      - "Emmy"
+      - "Grammy"
+      - "movie"
+      - "Netflix"
+      - "Disney"
+      - "Marvel"
+      - "Taylor Swift"
+      - "celebrity"
+    categories:
+      - "Pop-Culture"
+    min_liquidity: 50.0
+    enabled: false
+
+  # 🏎️ Formula 1 & Racing
+  - name: "Formula1"
+    keywords:
+      - "Formula 1"
+      - "F1"
+      - "racing"
+      - "Grand Prix"
+      - "Hamilton"
+      - "Verstappen"
+      - "Ferrari"
+      - "Mercedes"
+      - "Red Bull"
+    min_liquidity: 75.0
+    enabled: false
+
+  # 🏒 Hockey Markets
+  - name: "Hockey"
+    keywords:
+      - "NHL"
+      - "hockey"
+      - "Stanley Cup"
+      - "Rangers"
+      - "Bruins"
+      - "Penguins"
+      - "Lightning"
+    excluded_keywords:
+      - "field hockey"
+    min_liquidity: 50.0
+    enabled: false
+
+  # 📈 Stock Market & Finance
+  - name: "Finance"
+    keywords:
+      - "stock"
+      - "Tesla"
+      - "Apple"
+      - "TSLA"
+      - "AAPL"
+      - "market crash"
+      - "recession"
+      - "Fed"
+      - "interest rate"
+      - "inflation"
+    categories:
+      - "Finance"
+      - "Economics"
+    min_liquidity: 150.0
+    enabled: false
+
+  # 🌡️ Climate & Weather
+  - name: "Climate"
+    keywords:
+      - "temperature"
+      - "climate"
+      - "hurricane"
+      - "weather"
+      - "global warming"
+      - "carbon"
+      - "emissions"
+    categories:
+      - "Science"
+      - "Climate"
+    min_liquidity: 100.0
+    enabled: false 

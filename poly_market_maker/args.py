@@ -86,4 +86,19 @@ def get_args(args) -> dict:
         help="Strategy configuration file path",
     )
 
+    parser.add_argument(
+        "--funder-address",
+        type=str,
+        required=False,
+        help="Funder address for proxy wallet (MagicLink/email users)",
+    )
+
+    parser.add_argument(
+        "--signature-type",
+        type=int,
+        required=False,
+        default=0,
+        help="Signature type: 0=EOA, 1=POLY_PROXY (MagicLink), 2=POLY_GNOSIS_SAFE (MetaMask)",
+    )
+
     return parser.parse_args(args)
